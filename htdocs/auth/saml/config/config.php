@@ -19,6 +19,33 @@ foreach ($metadata_files as $file) {
     $metadata_sources[]= array('type' => 'xml', 'file' => $file);
 }
 
+// Fix up session handling config - to match Mahara
+$memcache_config = array();
+if (get_config('sessionsavehandler') == 'memcache') {
+    $sessionhandler = 'memcache';
+    $servers = array('localhost');
+    if (get_config('memcacheservers')) {
+        $servers = explode(',', get_config('memcacheservers'));
+        if (empty($servers)) {
+            $servers = array('localhost');
+        }
+    }
+    foreach ($servers as $server) {
+        if (strpos($server, ':')) {
+            list($host, $port) = explode(':', $server, 2);
+        }
+        else {
+            $host = $server;
+        }
+        if (empty($port)) {
+            $port = 11211;
+        }
+        $memcache_config []= array('hostname' => $host, 'port'=> $port);
+    }
+}
+else {
+    $sessionhandler = 'phpsession';
+}
 
 /*
  * The configuration of simpleSAMLphp
@@ -375,7 +402,7 @@ $config = array (
 	 * The default session handler is 'phpsession'.
 	 */
 	// 'session.handler'       => 'phpsession',
-	 'session.handler'       => 'memcache',
+	 'session.handler'       => $sessionhandler,
         // 'store.type' => 'phpsession',
 //	'session.handler'       => 'redis',
     //'store.type'       => 'sessionJSON:Store',
@@ -433,9 +460,7 @@ $config = array (
 	 *
 	 */
 	'memcache_store.servers' => array(
-		array(
-			array('hostname' => 'localhost'),
-		),
+        $memcache_config,
 	),
 
 
