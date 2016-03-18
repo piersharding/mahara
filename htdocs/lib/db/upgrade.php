@@ -4394,6 +4394,7 @@ function xmldb_core_upgrade($oldversion=0) {
         $table = new XMLDBTable('view');
         $field = new XMLDBField('numcolumns');
         drop_field($table, $field);
+    }
 
     if ($oldversion < 2016031700) {
         log_debug('Add client_connections_institution table');
