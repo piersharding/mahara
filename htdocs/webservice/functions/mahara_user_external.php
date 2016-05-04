@@ -107,6 +107,8 @@ class mahara_user_external extends external_api {
         require_once(get_config('docroot') . 'artefact/lib.php');
 
         $keys = array_keys(self::autologin_redirect_parameters()->keys);
+        error_log('in autologin_redirect: keys - '.var_export($keys, true));
+        error_log('in autologin_redirect: func_get_args - '.var_export(func_get_args(), true));
         $params = array_combine($keys, func_get_args());
 
         error_log('in autologin_redirect: '.var_export($params, true));
