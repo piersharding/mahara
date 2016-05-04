@@ -1870,7 +1870,9 @@ function handle_event($event, $data) {
                 safe_require($name, $sub->plugin);
                 $classname = 'Plugin' . ucfirst($name) . ucfirst($sub->plugin);
                 try {
-                    call_static_method($classname, $sub->callfunction, $event, $data);
+                    if (method_exists($classname, $sub->callfunction)) {
+                        call_static_method($classname, $sub->callfunction, $event, $data);
+                    }
                 }
                 catch (Exception $e) {
                     log_warn("Event $event caused an exception from plugin $classname "
@@ -2061,7 +2063,7 @@ abstract class Plugin implements IPlugin {
 
         // are web service connections enabled?
         if (!get_config('webservice_connections_enabled')) {
-            error_log('disabled');
+            log_debug('get_webservice_connections: disabled');
             return array();
         }
 
@@ -2110,7 +2112,6 @@ abstract class Plugin implements IPlugin {
             }
 
             // other static parameters - one per line
-            // error_log('connection: '.var_export($c, true));
             if (!empty($c->parameters)) {
                 $params = explode("\n", $c->parameters);
                 foreach ($params as $p) {
@@ -2148,7 +2149,6 @@ abstract class Plugin implements IPlugin {
 
                 case WEBSERVICE_TYPE_XMLRPC:
                     require_once(get_config('docroot') . "webservice/xmlrpc/lib.php");
-                    error_log('xmlrpc auth: '.var_export($auth, true));
                     $client = new webservice_xmlrpc_client($c->url, $auth);
                     if ($c->authtype == WEBSERVICE_AUTH_CERT) {
                         $client->setCertificate($c->certificate);
@@ -2167,7 +2167,7 @@ abstract class Plugin implements IPlugin {
                     break;
 
                 default:
-                    error_log("Unknown WEBSERVICE_TYPE: ".$c->type);
+                    log_error("Unknown WEBSERVICE_TYPE: ".$c->type);
                     break;
             }
             if ($client) {
@@ -2175,9 +2175,6 @@ abstract class Plugin implements IPlugin {
                 $connections[]= $client;
             }
         }
-
-        syslog(LOG_INFO, "Mahara triggered get_webservice_connections");
-        error_log("Mahara triggered get_webservice_connections");
 
         return $connections;
     }
